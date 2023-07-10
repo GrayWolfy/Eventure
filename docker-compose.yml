@@ -1,0 +1,49 @@
+version: '3.7'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    user: "${UID:-app}"
+    volumes:
+      - ./src:/var/www/html
+      - ./.config/unit:/docker-entrypoint.d
+      - ./:/www
+      - unit_tmp_vol:/tmp
+      - unit_tmp_vol:/var/run
+      - unit_vol:/var/lib/unit
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    networks:
+      - laravel_network
+
+  db:
+    image: postgres:13
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: laravel
+      POSTGRES_USER: laravel
+      POSTGRES_PASSWORD: secret
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    networks:
+      - laravel_network
+
+volumes:
+  dbdata:
+  unit_vol:
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  unit_tmp_vol:
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+
+networks:
+  laravel_network:
+    driver: bridge
